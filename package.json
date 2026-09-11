@@ -1,0 +1,15 @@
+{
+  "name": "wander-feed",
+  "version": "1.0.0",
+  "description": "Wander multimedia feed connected to Copilot Studio",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.0.0",
+    "express": "^5.0.0"
+  }
+}

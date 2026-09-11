@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>Wander Feed</title>
+
+    <link rel="stylesheet" href="/styles.css" />
+
+    <script src="https://unpkg.com/botframework-directlinejs@0.16.0/dist/directline.js"></script>
+  </head>
+
+  <body>
+    <main class="page">
+      <header class="header">
+        <div>
+          <p class="eyebrow">WANDER</p>
+          <h1>Build a useful feed</h1>
+
+          <p class="subtitle">
+            Search multiple content sources through the Wander API Agent.
+          </p>
+        </div>
+
+        <div
+          id="connectionStatus"
+          class="connection-status"
+        >
+          Not connected
+        </div>
+      </header>
+
+      <section class="request-panel">
+        <form id="feedForm">
+          <div class="field">
+            <label for="keyword">Topic or keyword</label>
+
+            <input
+              id="keyword"
+              name="keyword"
+              type="text"
+              placeholder="Example: artificial intelligence"
+              required
+            />
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label for="fetchAmount">
+                Number of feed items
+              </label>
+
+              <input
+                id="fetchAmount"
+                name="fetchAmount"
+                type="number"
+                min="1"
+                max="50"
+                value="10"
+              />
+            </div>
+
+            <div class="field">
+              <label for="source">Source</label>
+
+              <select id="source" name="source">
+                <option value="all">All sources</option>
+                <option value="youtube">YouTube</option>
+                <option value="hackernews">
+                  Hacker News
+                </option>
+                <option value="news">NewsAPI</option>
+                <option value="cardnews">
+                  KTV Card News
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <button id="submitButton" type="submit">
+            Create feed
+          </button>
+        </form>
+      </section>
+
+      <section class="status-area">
+        <p id="statusMessage">
+          Connecting to the API Agent...
+        </p>
+      </section>
+
+      <section
+        id="errorPanel"
+        class="error-panel hidden"
+        aria-live="assertive"
+      ></section>
+
+      <section
+        id="feed"
+        class="feed"
+        aria-live="polite"
+      ></section>
+
+      <details class="debug-panel">
+        <summary>
+          <span>Debug information history</span>
+          <button
+            id="clearDebugButton"
+            class="clear-debug-button"
+            type="button"
+          >
+            Clear history
+          </button>
+        </summary>
+        <pre id="debugOutput">No response received yet.</pre>
+      </details>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
