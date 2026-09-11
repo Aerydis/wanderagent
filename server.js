@@ -3,6 +3,34 @@ import express from "express";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const allowedOrigins = new Set([
+  "https://aerydis.github.io",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+]);
+
+app.use((request, response, next) => {
+  const origin = request.headers.origin;
+
+  if (origin && allowedOrigins.has(origin)) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+    response.setHeader("Vary", "Origin");
+  }
+
+  if (request.method === "OPTIONS") {
+    response.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,OPTIONS"
+    );
+    response.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type"
+    );
+    return response.sendStatus(204);
+  }
+
+  next();
+});
 
 app.use(express.json());
 app.use(express.static("docs"));

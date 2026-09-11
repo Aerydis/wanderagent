@@ -18,6 +18,7 @@ const promptElement =
 
 const DEFAULT_FETCH_AMOUNT = 3;
 const DEFAULT_SOURCE = "all";
+const API_BASE_URL = "https://wanderagent.onrender.com";
 
 const submitButtonElement =
   document.getElementById("submitButton");
@@ -51,7 +52,7 @@ async function startConnection() {
     clearError();
 
     const tokenResponse = await fetch(
-      "/api/directline/token"
+      `${API_BASE_URL}/api/directline/token`
     );
 
     const tokenResponseText =
@@ -812,7 +813,9 @@ function appendExplanationMessage(container, role, text, extraClass = "") {
 }
 
 async function createExplanationAgentConnection() {
-  const tokenResponse = await fetch("/api/explanation/token");
+  const tokenResponse = await fetch(
+    `${API_BASE_URL}/api/explanation/token`
+  );
   const responseText = await tokenResponse.text();
   let tokenData;
 
