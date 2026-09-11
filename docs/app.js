@@ -44,11 +44,11 @@ async function startConnection() {
   try {
     if (!window.DirectLine?.DirectLine) {
       throw new Error(
-        "The Direct Line library could not be loaded. Check the internet connection and refresh the page."
+        "Direct Line 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인한 후 페이지를 새로 고침하세요."
       );
     }
 
-    setConnectionStatus("Getting token...", "normal");
+    setConnectionStatus("토큰을 가져오는 중...", "normal");
     clearError();
 
     const tokenResponse = await fetch(
@@ -64,21 +64,21 @@ async function startConnection() {
       tokenData = JSON.parse(tokenResponseText);
     } catch {
       throw new Error(
-        "The backend token response was not valid JSON."
+        "백엔드 토큰 응답이 올바른 JSON 형식이 아닙니다."
       );
     }
 
     if (!tokenResponse.ok) {
       const message =
         tokenData.error ||
-        `Token request failed with status ${tokenResponse.status}.`;
+        `토큰 요청에 실패했습니다. 상태 코드: ${tokenResponse.status}`;
 
       throw new Error(message);
     }
 
     if (!tokenData.token) {
       throw new Error(
-        "The backend did not return a Direct Line token."
+        "백엔드가 Direct Line 토큰을 반환하지 않았습니다."
       );
     }
 
@@ -87,10 +87,10 @@ async function startConnection() {
       conversationId:
         tokenData.conversationId || null,
       expiresIn: tokenData.expiresIn || null,
-      note: "The token is deliberately not displayed."
+      note: "토큰은 보안을 위해 표시하지 않습니다."
     });
 
-    setConnectionStatus("Connecting...", "normal");
+    setConnectionStatus("연결하는 중...", "normal");
 
     directLine = new window.DirectLine.DirectLine({
       token: tokenData.token,
@@ -107,12 +107,12 @@ async function startConnection() {
     connected = false;
 
     setConnectionStatus(
-      "Connection failed",
+      "연결 실패",
       "error"
     );
 
     statusMessageElement.textContent =
-      "The website could not connect to the parent agent.";
+      "웹사이트가 상위 에이전트에 연결하지 못했습니다.";
 
     showError(error.message);
   }
@@ -128,37 +128,37 @@ function subscribeToConnectionStatus() {
 
       if (status === 0) {
         setConnectionStatus(
-          "Starting connection...",
+          "연결 시작 중...",
           "normal"
         );
       }
 
       if (status === 1) {
-        setConnectionStatus("Connecting...", "normal");
+        setConnectionStatus("연결하는 중...", "normal");
       }
 
       if (status === 2) {
         connected = true;
 
         setConnectionStatus(
-          "Connected",
+          "연결됨",
           "connected"
         );
 
         statusMessageElement.textContent =
-          "Tell Wander what you are curious about.";
+          "Wander에게 궁금한 것을 알려 주세요.";
       }
 
       if (status === 3) {
         connected = false;
 
         setConnectionStatus(
-          "Token expired",
+          "토큰 만료",
           "error"
         );
 
         showError(
-          "The temporary Direct Line token expired. Refresh the page to create a new connection."
+          "임시 Direct Line 토큰이 만료되었습니다. 새 연결을 만들려면 페이지를 새로 고침하세요."
         );
       }
 
@@ -166,12 +166,12 @@ function subscribeToConnectionStatus() {
         connected = false;
 
         setConnectionStatus(
-          "Connection failed",
+          "연결 실패",
           "error"
         );
 
         showError(
-          "Direct Line could not connect to the agent. Confirm the secret, web-channel security setting, and published agent."
+          "Direct Line이 에이전트에 연결하지 못했습니다. 시크릿, 웹 채널 보안 설정, 게시된 에이전트를 확인하세요."
         );
       }
 
@@ -179,7 +179,7 @@ function subscribeToConnectionStatus() {
         connected = false;
 
         setConnectionStatus(
-          "Connection ended",
+          "연결 종료",
           "error"
         );
       }
@@ -194,12 +194,12 @@ function subscribeToConnectionStatus() {
       connected = false;
 
       setConnectionStatus(
-        "Connection failed",
+        "연결 실패",
         "error"
       );
 
       showError(
-        "An error occurred while connecting to Direct Line."
+        "Direct Line에 연결하는 동안 오류가 발생했습니다."
       );
     }
   });
@@ -240,7 +240,7 @@ function subscribeToAgentActivities() {
       if (activity.type === "typing") {
         if (waitingForFeedResponse) {
           updateRequestProgress(
-            "The parent agent is collecting content"
+            "상위 에이전트가 콘텐츠를 수집하는 중입니다"
           );
         }
 
@@ -261,7 +261,7 @@ function subscribeToAgentActivities() {
       ) {
         finishRequest();
         showError(
-          "Copilot Studio denied access to the parent agent. Verify that DIRECT_LINE_SECRET belongs to the published parent agent's Direct Line channel and that the agent allows this channel/user."
+          "Copilot Studio가 상위 에이전트 접근을 거부했습니다. DIRECT_LINE_SECRET이 게시된 상위 에이전트의 Direct Line 채널에 해당하는지, 에이전트가 이 채널과 사용자를 허용하는지 확인하세요."
         );
         return;
       }
@@ -297,7 +297,7 @@ function subscribeToAgentActivities() {
           finishRequest();
 
           showError(
-            "The parent agent responded, but its response was not valid JSON. Expand Debug information to inspect the response."
+            "상위 에이전트가 응답했지만 올바른 JSON 형식이 아닙니다. 응답을 확인하려면 디버그 정보를 펼치세요."
           );
         }
       }
@@ -312,7 +312,7 @@ function subscribeToAgentActivities() {
       finishRequest();
 
       showError(
-        "An error occurred while receiving the parent agent response."
+        "상위 에이전트의 응답을 받는 동안 오류가 발생했습니다."
       );
     }
   });
@@ -325,7 +325,7 @@ formElement.addEventListener(
 
     if (!connected || !directLine) {
       showError(
-        "The website is not connected to the parent agent. Refresh the page and wait for Connected to appear."
+        "웹사이트가 상위 에이전트에 연결되지 않았습니다. 페이지를 새로 고침하고 '연결됨'이 표시될 때까지 기다리세요."
       );
 
       return;
@@ -335,7 +335,7 @@ formElement.addEventListener(
       promptElement.value.trim();
 
     if (!message) {
-      showError("Tell Wander what you are curious about.");
+      showError("Wander에게 궁금한 것을 알려 주세요.");
       return;
     }
 
@@ -349,7 +349,7 @@ formElement.addEventListener(
     startRequestProgress();
 
     statusMessageElement.textContent =
-      "Sending the request to the parent agent...";
+      "상위 에이전트에 요청을 보내는 중...";
 
     const requestObject = {
       message,
@@ -383,7 +383,7 @@ formElement.addEventListener(
           );
 
           statusMessageElement.textContent =
-            "The parent agent is processing the request.";
+            "상위 에이전트가 요청을 처리하는 중입니다.";
         },
 
         error: (error) => {
@@ -395,7 +395,7 @@ formElement.addEventListener(
           finishRequest();
 
           showError(
-            "The request could not be sent to the parent agent."
+            "상위 에이전트에 요청을 보내지 못했습니다."
           );
         }
       });
@@ -480,12 +480,10 @@ function renderAgentOutput(data) {
 
   if (validItems.length === 0) {
     statusMessageElement.textContent =
-      "The agent returned no matching content.";
+      "에이전트가 일치하는 콘텐츠를 찾지 못했습니다.";
   } else {
     statusMessageElement.textContent =
-      `${validItems.length} feed item${
-        validItems.length === 1 ? "" : "s"
-      } loaded.`;
+      `${validItems.length}개의 피드 항목을 불러왔습니다.`;
   }
 
   if (
@@ -495,17 +493,17 @@ function renderAgentOutput(data) {
     const messages = data.errors.map(
       (error) => {
         const source =
-          error.source || "unknown source";
+          error.source || "알 수 없는 소스";
 
         const message =
-          error.message || "Unknown error";
+          error.message || "알 수 없는 오류";
 
         return `${source}: ${message}`;
       }
     );
 
     showError(
-      `Some content sources failed. ${messages.join(
+      `일부 콘텐츠 소스에 문제가 발생했습니다. ${messages.join(
         " "
       )}`
     );
@@ -679,7 +677,7 @@ function createFeedCard(item) {
     links.appendChild(
       createExternalLink(
         discussionUrl,
-        "Open discussion",
+        "토론 열기",
         true
       )
     );
@@ -704,7 +702,7 @@ function createExplanationTrigger(item) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "explanation-button";
-  button.textContent = "Explain this";
+  button.textContent = "설명 보기";
   button.addEventListener("click", () => {
     openExplanationWorkspace(item, container.closest(".card-layout"));
   });
@@ -740,8 +738,8 @@ function openExplanationWorkspace(item, cardLayout) {
   closeButton.type = "button";
   closeButton.className = "explanation-close";
   closeButton.textContent = "X";
-  closeButton.setAttribute("aria-label", "Close explanation workspace");
-  closeButton.title = "Close explanation workspace";
+  closeButton.setAttribute("aria-label", "설명 창 닫기");
+  closeButton.title = "설명 창 닫기";
   closeButton.addEventListener("click", () => workspace.remove());
 
   chatPanel.append(closeButton, createExplanationChat(item));
@@ -757,23 +755,23 @@ function createExplanationChat(item) {
 
   const heading = document.createElement("div");
   heading.className = "explanation-heading";
-  heading.innerHTML = "<span>Explanation agent</span><small>Ask about this post</small>";
+  heading.innerHTML = "<span>설명 에이전트</span><small>이 게시물에 대해 질문하세요</small>";
 
   const messages = document.createElement("div");
   messages.className = "explanation-messages";
   messages.setAttribute("aria-live", "polite");
-  appendExplanationMessage(messages, "agent", `I can unpack "${item.title}", clarify the main idea, or help you decide what to explore next.`);
+  appendExplanationMessage(messages, "agent", `"${item.title}"의 내용을 풀어 설명하고, 핵심 아이디어를 명확히 하거나, 다음에 무엇을 살펴볼지 결정하는 데 도움을 드릴 수 있어요.`);
 
   const form = document.createElement("form");
   form.className = "explanation-form";
   const input = document.createElement("input");
   input.type = "text";
-  input.placeholder = "What should I explain?";
+  input.placeholder = "무엇을 설명해 드릴까요?";
   input.required = true;
   input.maxLength = 500;
   const submit = document.createElement("button");
   submit.type = "submit";
-  submit.textContent = "Send";
+  submit.textContent = "보내기";
   form.append(input, submit);
 
   form.addEventListener("submit", async (event) => {
@@ -784,7 +782,7 @@ function createExplanationChat(item) {
     input.value = "";
     input.disabled = true;
     submit.disabled = true;
-    appendExplanationMessage(messages, "agent", "Thinking...", "pending");
+    appendExplanationMessage(messages, "agent", "생각하는 중...", "pending");
     try {
       const explanationLine = await explanationLinePromise;
       const answer = await askExplanationAgent(explanationLine, item, question);
@@ -792,7 +790,7 @@ function createExplanationChat(item) {
       appendExplanationMessage(messages, "agent", answer);
     } catch (error) {
       messages.lastElementChild.remove();
-      appendExplanationMessage(messages, "agent", error.message || "The explanation agent is unavailable.");
+      appendExplanationMessage(messages, "agent", error.message || "설명 에이전트를 사용할 수 없습니다.");
     } finally {
       input.disabled = false;
       submit.disabled = false;
@@ -823,13 +821,13 @@ async function createExplanationAgentConnection() {
     tokenData = JSON.parse(responseText);
   } catch {
     throw new Error(
-      `The explanation token endpoint returned an unexpected response (${tokenResponse.status}). Restart the backend server.`
+      `설명 토큰 엔드포인트가 예상하지 못한 응답을 반환했습니다(${tokenResponse.status}). 백엔드 서버를 다시 시작하세요.`
     );
   }
 
   if (!tokenResponse.ok || !tokenData.token) {
     throw new Error(
-      tokenData.error || "The explanation agent is unavailable."
+      tokenData.error || "설명 에이전트를 사용할 수 없습니다."
     );
   }
 
@@ -846,7 +844,7 @@ async function askExplanationAgent(explanationLine, item, question) {
     const timeout = setTimeout(() => {
       if (!settled) {
         settled = true;
-        reject(new Error("The explanation agent took too long to respond."));
+        reject(new Error("설명 에이전트의 응답 시간이 너무 오래 걸립니다."));
       }
     }, 45000);
 
@@ -871,7 +869,7 @@ async function askExplanationAgent(explanationLine, item, question) {
         if (!settled) {
           settled = true;
           clearTimeout(timeout);
-          reject(new Error("The explanation agent connection failed."));
+          reject(new Error("설명 에이전트 연결에 실패했습니다."));
         }
       }
     });
@@ -897,7 +895,7 @@ async function askExplanationAgent(explanationLine, item, question) {
         if (!settled) {
           settled = true;
           clearTimeout(timeout);
-          reject(new Error("The explanation question could not be sent."));
+          reject(new Error("설명 질문을 보내지 못했습니다."));
         }
       }
     });
@@ -915,7 +913,7 @@ function createStatistics(item) {
   if (item.source === "youtube") {
     if (item.metadata?.video_length) {
       statistics.push(
-        `Length: ${formatDuration(
+        `길이: ${formatDuration(
           item.metadata.video_length
         )}`
       );
@@ -929,7 +927,7 @@ function createStatistics(item) {
       statistics.push(
         `${formatNumber(
           item.metadata.view_count
-        )} views`
+        )}회 조회`
       );
     }
   }
@@ -943,7 +941,7 @@ function createStatistics(item) {
       statistics.push(
         `${formatNumber(
           item.metadata.upvote_count
-        )} points`
+        )}포인트`
       );
     }
 
@@ -955,7 +953,7 @@ function createStatistics(item) {
       statistics.push(
         `${formatNumber(
           item.metadata.comment_count
-        )} comments`
+        )}개 댓글`
       );
     }
   }
@@ -969,7 +967,7 @@ function createStatistics(item) {
     statistics.push(
       `${formatNumber(
         item.metadata.view_count
-      )} views`
+      )}회 조회`
     );
   }
 
@@ -1010,8 +1008,8 @@ function getSourceLabel(source) {
   const labels = {
     youtube: "YouTube",
     hackernews: "Hacker News",
-    news: "News",
-    cardnews: "Card News"
+    news: "뉴스",
+    cardnews: "카드 뉴스"
   };
 
   return labels[source] || source;
@@ -1019,13 +1017,13 @@ function getSourceLabel(source) {
 
 function getPrimaryLinkLabel(source) {
   const labels = {
-    youtube: "Watch video",
-    hackernews: "Read article",
-    news: "Read original article",
-    cardnews: "Open card news"
+    youtube: "동영상 보기",
+    hackernews: "기사 읽기",
+    news: "원문 기사 읽기",
+    cardnews: "카드 뉴스 열기"
   };
 
-  return labels[source] || "Open";
+  return labels[source] || "열기";
 }
 
 function formatDate(value) {
@@ -1040,7 +1038,7 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat(
-    "en",
+    "ko-KR",
     {
       year: "numeric",
       month: "short",
@@ -1057,7 +1055,7 @@ function formatNumber(value) {
   }
 
   return new Intl.NumberFormat(
-    "en",
+    "ko-KR",
     {
       notation: "compact",
       maximumFractionDigits: 1
@@ -1214,7 +1212,7 @@ function renderDebugHistory() {
           )}`;
         })
         .join("\n\n")
-      : "No response received yet.";
+      : "아직 받은 응답이 없습니다.";
 }
 
 clearDebugButtonElement.addEventListener(
@@ -1234,7 +1232,7 @@ function startRequestProgress() {
     }
 
     updateRequestProgress(
-      "The parent agent is processing the request"
+      "상위 에이전트가 요청을 처리하는 중입니다"
     );
   }, 1000);
 }
@@ -1242,10 +1240,10 @@ function startRequestProgress() {
 function updateRequestProgress(message) {
   const elapsed = requestStartedAt
     ? formatElapsedTime(Date.now() - requestStartedAt)
-    : "0s";
+    : "0초";
 
   statusMessageElement.textContent =
-    `${message} (${elapsed}; ${requestActivityCount} activities received).`;
+    `${message} (${elapsed}, 활동 ${requestActivityCount}개 수신).`;
 }
 
 function finishRequest() {
@@ -1261,6 +1259,6 @@ function formatElapsedTime(milliseconds) {
   const seconds = totalSeconds % 60;
 
   return minutes > 0
-    ? `${minutes}m ${seconds}s`
-    : `${seconds}s`;
+    ? `${minutes}분 ${seconds}초`
+    : `${seconds}초`;
 }
