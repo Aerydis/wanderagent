@@ -22,7 +22,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -97,13 +98,6 @@ h1 {
   margin-top: 0;
 }
 
-.field-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-top: 17px;
-}
-
 label {
   display: block;
   margin-bottom: 8px;
@@ -113,7 +107,8 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 47px;
   padding: 10px 13px;
@@ -122,8 +117,15 @@ select {
   background: white;
 }
 
+textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: #6268e8;
   outline: 3px solid rgba(98, 104, 232, 0.15);
 }
@@ -178,12 +180,197 @@ button:disabled {
   gap: 18px;
 }
 
+.card-layout {
+  position: relative;
+}
+
 .card {
   overflow: hidden;
   border: 1px solid #e0e3e8;
   border-radius: 22px;
   background: white;
   box-shadow: 0 10px 30px rgba(24, 28, 38, 0.055);
+}
+
+.explanation-trigger {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eceef2;
+}
+
+.explanation-button {
+  width: auto;
+  min-height: 36px;
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid #cfd3f7;
+  border-radius: 9px;
+  background: #f1f2ff;
+  color: #4d53bf;
+  font-size: 13px;
+}
+
+.explanation-button:hover {
+  background: #e6e8ff;
+}
+
+.explanation-workspace {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(19, 22, 31, 0.72);
+  backdrop-filter: blur(9px);
+}
+
+.explanation-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  width: min(1380px, 100%);
+  height: min(850px, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  background: #f7f7fa;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+}
+
+.explanation-post-panel {
+  overflow-y: auto;
+  padding: clamp(20px, 4vw, 58px);
+  background: #eef0f4;
+}
+
+.explanation-post-panel .card {
+  max-width: 760px;
+  margin: 0 auto;
+  box-shadow: 0 20px 55px rgba(24, 28, 38, 0.13);
+}
+
+.explanation-post-panel .card-image {
+  max-height: 520px;
+}
+
+.explanation-post-panel .card h2 {
+  font-size: clamp(25px, 3vw, 38px);
+}
+
+.explanation-chat-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #171a24;
+}
+
+.explanation-close {
+  position: absolute;
+  z-index: 2;
+  top: 17px;
+  right: 18px;
+  width: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #414656;
+  border-radius: 50%;
+  background: transparent;
+  color: #d7dae5;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.explanation-close:hover {
+  background: #292e3b;
+}
+
+.explanation-chat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.explanation-heading {
+  padding: 25px 24px 21px;
+  border-bottom: 1px solid #303542;
+  color: #f1f2f7;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.explanation-heading small {
+  display: block;
+  margin-top: 3px;
+  color: #969cac;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.explanation-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.explanation-message {
+  width: fit-content;
+  max-width: 92%;
+  margin: 0 0 10px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  background: #292e3b;
+  color: #d9dce5;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.explanation-message.user {
+  margin-left: auto;
+  background: #6570ed;
+  color: white;
+}
+
+.explanation-message.pending {
+  color: #777d87;
+  font-style: italic;
+}
+
+.explanation-form {
+  display: flex;
+  gap: 8px;
+  padding: 18px;
+  border-top: 1px solid #303542;
+}
+
+.explanation-form input {
+  flex: 1;
+  min-height: 38px;
+  padding: 7px 9px;
+  border-color: #454b5b;
+  background: #242936;
+  color: #f4f5f8;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.explanation-form button {
+  width: auto;
+  min-height: 38px;
+  margin: 0;
+  padding: 7px 11px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.explanation-form button {
+  background: #6570ed;
+}
+
+.explanation-form button:hover {
+  background: #7b85f5;
 }
 
 .card-image {
@@ -347,7 +534,23 @@ button:disabled {
     margin-top: 18px;
   }
 
-  .field-grid {
+  .explanation-workspace {
+    padding: 0;
+  }
+
+  .explanation-panel {
     grid-template-columns: 1fr;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .explanation-post-panel {
+    max-height: 48%;
+    padding: 24px 16px;
+  }
+
+  .explanation-chat-panel {
+    min-height: 52%;
   }
 }

@@ -13,14 +13,11 @@ const feedElement =
 const formElement =
   document.getElementById("feedForm");
 
-const keywordElement =
-  document.getElementById("keyword");
+const promptElement =
+  document.getElementById("prompt");
 
-const fetchAmountElement =
-  document.getElementById("fetchAmount");
-
-const sourceElement =
-  document.getElementById("source");
+const DEFAULT_FETCH_AMOUNT = 3;
+const DEFAULT_SOURCE = "all";
 
 const submitButtonElement =
   document.getElementById("submitButton");
@@ -114,7 +111,7 @@ async function startConnection() {
     );
 
     statusMessageElement.textContent =
-      "The website could not connect to the API Agent.";
+      "The website could not connect to the parent agent.";
 
     showError(error.message);
   }
@@ -148,7 +145,7 @@ function subscribeToConnectionStatus() {
         );
 
         statusMessageElement.textContent =
-          "Enter a topic and create your feed.";
+          "Tell Wander what you are curious about.";
       }
 
       if (status === 3) {
@@ -242,7 +239,7 @@ function subscribeToAgentActivities() {
       if (activity.type === "typing") {
         if (waitingForFeedResponse) {
           updateRequestProgress(
-            "The API Agent is collecting content"
+            "The parent agent is collecting content"
           );
         }
 
@@ -254,6 +251,17 @@ function subscribeToAgentActivities() {
       }
 
       if (!activity.text) {
+        return;
+      }
+
+      if (
+        waitingForFeedResponse &&
+        activity.text.toLowerCase().includes("don't have access to talk to this bot")
+      ) {
+        finishRequest();
+        showError(
+          "Copilot Studio denied access to the parent agent. Verify that DIRECT_LINE_SECRET belongs to the published parent agent's Direct Line channel and that the agent allows this channel/user."
+        );
         return;
       }
 
@@ -288,7 +296,7 @@ function subscribeToAgentActivities() {
           finishRequest();
 
           showError(
-            "The API Agent responded, but its response was not valid JSON. Expand Debug information to inspect the response."
+            "The parent agent responded, but its response was not valid JSON. Expand Debug information to inspect the response."
           );
         }
       }
@@ -303,7 +311,7 @@ function subscribeToAgentActivities() {
       finishRequest();
 
       showError(
-        "An error occurred while receiving the API Agent response."
+        "An error occurred while receiving the parent agent response."
       );
     }
   });
@@ -316,33 +324,17 @@ formElement.addEventListener(
 
     if (!connected || !directLine) {
       showError(
-        "The website is not connected to the API Agent. Refresh the page and wait for Connected to appear."
+        "The website is not connected to the parent agent. Refresh the page and wait for Connected to appear."
       );
 
       return;
     }
 
-    const keyword =
-      keywordElement.value.trim();
+    const message =
+      promptElement.value.trim();
 
-    const source =
-      sourceElement.value;
-
-    const rawAmount =
-      Number(fetchAmountElement.value);
-
-    const fetchAmount = Math.min(
-      Math.max(
-        Number.isFinite(rawAmount)
-          ? Math.floor(rawAmount)
-          : 10,
-        1
-      ),
-      50
-    );
-
-    if (!keyword) {
-      showError("Enter a topic or keyword.");
+    if (!message) {
+      showError("Tell Wander what you are curious about.");
       return;
     }
 
@@ -356,13 +348,12 @@ formElement.addEventListener(
     startRequestProgress();
 
     statusMessageElement.textContent =
-      "Sending the request to the API Agent...";
+      "Sending the request to the parent agent...";
 
     const requestObject = {
-      action: "collect_feed",
-      keyword,
-      fetch_amount: fetchAmount,
-      source,
+      message,
+      fetch_amount: DEFAULT_FETCH_AMOUNT,
+      source: DEFAULT_SOURCE,
       output_format: "wander_feed_json"
     };
 
@@ -391,7 +382,7 @@ formElement.addEventListener(
           );
 
           statusMessageElement.textContent =
-            "The API Agent is processing the request.";
+            "The parent agent is processing the request.";
         },
 
         error: (error) => {
@@ -403,7 +394,7 @@ formElement.addEventListener(
           finishRequest();
 
           showError(
-            "The request could not be sent to the API Agent."
+            "The request could not be sent to the parent agent."
           );
         }
       });
@@ -561,6 +552,9 @@ function isValidFeedItem(item) {
 }
 
 function createFeedCard(item) {
+  const cardLayout = document.createElement("div");
+  cardLayout.className = "card-layout";
+
   const article =
     document.createElement("article");
 
@@ -694,9 +688,217 @@ function createFeedCard(item) {
     body.appendChild(links);
   }
 
-  article.appendChild(body);
+  body.appendChild(createExplanationTrigger(item));
 
-  return article;
+  article.appendChild(body);
+  cardLayout.appendChild(article);
+
+  return cardLayout;
+}
+
+function createExplanationTrigger(item) {
+  const container = document.createElement("div");
+  container.className = "explanation-trigger";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "explanation-button";
+  button.textContent = "Explain this";
+  button.addEventListener("click", () => {
+    openExplanationWorkspace(item, container.closest(".card-layout"));
+  });
+
+  container.appendChild(button);
+  return container;
+}
+
+function openExplanationWorkspace(item, cardLayout) {
+  document.querySelector(".explanation-workspace")?.remove();
+
+  const workspace = document.createElement("section");
+  workspace.className = "explanation-workspace";
+  workspace.addEventListener("click", (event) => {
+    if (event.target === workspace) {
+      workspace.remove();
+    }
+  });
+
+  const panel = document.createElement("div");
+  panel.className = "explanation-panel";
+
+  const postPanel = document.createElement("div");
+  postPanel.className = "explanation-post-panel";
+  const post = cardLayout.querySelector(".card").cloneNode(true);
+  post.querySelector(".explanation-trigger")?.remove();
+  postPanel.appendChild(post);
+
+  const chatPanel = document.createElement("div");
+  chatPanel.className = "explanation-chat-panel";
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "explanation-close";
+  closeButton.textContent = "X";
+  closeButton.setAttribute("aria-label", "Close explanation workspace");
+  closeButton.title = "Close explanation workspace";
+  closeButton.addEventListener("click", () => workspace.remove());
+
+  chatPanel.append(closeButton, createExplanationChat(item));
+  panel.append(postPanel, chatPanel);
+  workspace.appendChild(panel);
+  document.body.appendChild(workspace);
+}
+
+function createExplanationChat(item) {
+  const sidebar = document.createElement("div");
+  sidebar.className = "explanation-chat";
+  const explanationLinePromise = createExplanationAgentConnection();
+
+  const heading = document.createElement("div");
+  heading.className = "explanation-heading";
+  heading.innerHTML = "<span>Explanation agent</span><small>Ask about this post</small>";
+
+  const messages = document.createElement("div");
+  messages.className = "explanation-messages";
+  messages.setAttribute("aria-live", "polite");
+  appendExplanationMessage(messages, "agent", `I can unpack "${item.title}", clarify the main idea, or help you decide what to explore next.`);
+
+  const form = document.createElement("form");
+  form.className = "explanation-form";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "What should I explain?";
+  input.required = true;
+  input.maxLength = 500;
+  const submit = document.createElement("button");
+  submit.type = "submit";
+  submit.textContent = "Send";
+  form.append(input, submit);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+    appendExplanationMessage(messages, "user", question);
+    input.value = "";
+    input.disabled = true;
+    submit.disabled = true;
+    appendExplanationMessage(messages, "agent", "Thinking...", "pending");
+    try {
+      const explanationLine = await explanationLinePromise;
+      const answer = await askExplanationAgent(explanationLine, item, question);
+      messages.lastElementChild.remove();
+      appendExplanationMessage(messages, "agent", answer);
+    } catch (error) {
+      messages.lastElementChild.remove();
+      appendExplanationMessage(messages, "agent", error.message || "The explanation agent is unavailable.");
+    } finally {
+      input.disabled = false;
+      submit.disabled = false;
+      input.focus();
+    }
+  });
+
+  sidebar.append(heading, messages, form);
+  return sidebar;
+}
+
+function appendExplanationMessage(container, role, text, extraClass = "") {
+  const message = document.createElement("p");
+  message.className = `explanation-message ${role} ${extraClass}`.trim();
+  message.textContent = text;
+  container.appendChild(message);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function createExplanationAgentConnection() {
+  const tokenResponse = await fetch("/api/explanation/token");
+  const responseText = await tokenResponse.text();
+  let tokenData;
+
+  try {
+    tokenData = JSON.parse(responseText);
+  } catch {
+    throw new Error(
+      `The explanation token endpoint returned an unexpected response (${tokenResponse.status}). Restart the backend server.`
+    );
+  }
+
+  if (!tokenResponse.ok || !tokenData.token) {
+    throw new Error(
+      tokenData.error || "The explanation agent is unavailable."
+    );
+  }
+
+  return new window.DirectLine.DirectLine({
+    token: tokenData.token,
+    domain: "https://directline.botframework.com/v3/directline",
+    webSocket: true
+  });
+}
+
+async function askExplanationAgent(explanationLine, item, question) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("The explanation agent took too long to respond."));
+      }
+    }, 45000);
+
+    explanationLine.activity$.subscribe({
+      next: (activity) => {
+        if (settled || activity.type !== "message" || !activity.text) {
+          return;
+        }
+
+        if (
+          activity.from?.role === "user" ||
+          activity.from?.id === getOrCreateUserId()
+        ) {
+          return;
+        }
+
+        settled = true;
+        clearTimeout(timeout);
+        resolve(activity.text.trim());
+      },
+      error: () => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          reject(new Error("The explanation agent connection failed."));
+        }
+      }
+    });
+
+    explanationLine.postActivity({
+      type: "message",
+      from: {
+        id: getOrCreateUserId(),
+        role: "user"
+      },
+      text: JSON.stringify({
+        message: question,
+        context: {
+          title: item.title,
+          description: stripHtml(item.description || ""),
+          source: getSourceLabel(item.source),
+          url: item.url || ""
+        },
+        output_format: "explanation_text"
+      })
+    }).subscribe({
+      error: () => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          reject(new Error("The explanation question could not be sent."));
+        }
+      }
+    });
+  });
 }
 
 function createStatistics(item) {
@@ -1029,7 +1231,7 @@ function startRequestProgress() {
     }
 
     updateRequestProgress(
-      "The API Agent is processing the request"
+      "The parent agent is processing the request"
     );
   }, 1000);
 }

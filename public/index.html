@@ -23,7 +23,8 @@
           <h1>Build a useful feed</h1>
 
           <p class="subtitle">
-            Search multiple content sources through the Wander API Agent.
+            Tell Wander what you are curious about. The parent agent will
+            collect, filter, and explain a feed for you.
           </p>
         </div>
 
@@ -38,48 +39,15 @@
       <section class="request-panel">
         <form id="feedForm">
           <div class="field">
-            <label for="keyword">Topic or keyword</label>
+            <label for="prompt">What are you curious about?</label>
 
-            <input
-              id="keyword"
-              name="keyword"
-              type="text"
-              placeholder="Example: artificial intelligence"
+            <textarea
+              id="prompt"
+              name="prompt"
+              rows="4"
+              placeholder="Talk to Wander. Example: I have some free time and want calm, useful stories about space."
               required
-            />
-          </div>
-
-          <div class="field-grid">
-            <div class="field">
-              <label for="fetchAmount">
-                Number of feed items
-              </label>
-
-              <input
-                id="fetchAmount"
-                name="fetchAmount"
-                type="number"
-                min="1"
-                max="50"
-                value="10"
-              />
-            </div>
-
-            <div class="field">
-              <label for="source">Source</label>
-
-              <select id="source" name="source">
-                <option value="all">All sources</option>
-                <option value="youtube">YouTube</option>
-                <option value="hackernews">
-                  Hacker News
-                </option>
-                <option value="news">NewsAPI</option>
-                <option value="cardnews">
-                  KTV Card News
-                </option>
-              </select>
-            </div>
+            ></textarea>
           </div>
 
           <button id="submitButton" type="submit">
@@ -90,7 +58,7 @@
 
       <section class="status-area">
         <p id="statusMessage">
-          Connecting to the API Agent...
+          Connecting to the parent agent...
         </p>
       </section>
 
@@ -124,3 +92,4 @@
     <script src="/app.js"></script>
   </body>
 </html>
+s
