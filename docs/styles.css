@@ -67,6 +67,95 @@ textarea {
   padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
+.app-shell.onboarding-state {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.onboarding-state .app-bar,
+.onboarding-state .status-area,
+.onboarding-state .empty-state,
+.onboarding-state .bottom-nav,
+.onboarding-state .dev-tools {
+  display: none;
+}
+
+.onboarding-state .feed-column {
+  width: min(680px, 100%);
+  min-height: 0;
+  background: transparent;
+  border: 0;
+}
+
+.onboarding-state .composer-section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.onboarding-prompt {
+  margin: 0 0 22px;
+  color: var(--text);
+  font-size: clamp(30px, 6vw, 48px);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.onboarding-state .composer {
+  display: block;
+}
+
+.onboarding-state .composer-avatar {
+  display: none;
+}
+
+.onboarding-state .composer-input-wrap {
+  width: 100%;
+}
+
+.onboarding-state .composer textarea {
+  min-height: 148px;
+  max-height: 260px;
+  padding: 26px 28px;
+  border: 1px solid var(--border-strong);
+
+  .onboarding-prompt {
+    margin-bottom: 18px;
+    font-size: clamp(27px, 8vw, 38px);
+  }
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 18px 45px rgba(80, 70, 58, 0.1);
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+.onboarding-state .composer textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.onboarding-state .composer-submit {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 44px;
+  height: 44px;
+}
+
+.onboarding-state .error-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+  max-width: 680px;
+  margin: 0 auto;
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-soft);
+}
+
 .feed-column {
   width: min(var(--feed-width), 100%);
   margin: 0 auto;
@@ -144,6 +233,7 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  position: relative;
 }
 
 .composer-avatar {
@@ -287,7 +377,7 @@ textarea {
 }
 
 .post-layout + .post-layout {
-  border-top: 1px solid var(--border);
+  margin-top: 16px;
 }
 
 .post {
@@ -358,15 +448,13 @@ textarea {
 .post-media-wrap {
   position: relative;
   background: var(--bg);
-  aspect-ratio: 4 / 5;
   overflow: hidden;
 }
 
 .post-media {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
 }
 
 .post-play-badge {

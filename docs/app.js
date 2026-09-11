@@ -22,6 +22,9 @@ const infoSectionElement =
 const composerSectionElement =
   document.getElementById("composerSection");
 
+const appShellElement =
+  document.querySelector(".app-shell");
+
 const formElement =
   document.getElementById("feedForm");
 
@@ -353,6 +356,7 @@ formElement.addEventListener(
 
     clearError();
     feedElement.replaceChildren();
+    appShellElement?.classList.remove("onboarding-state");
     updateEmptyState(false);
 
     waitingForFeedResponse = true;
