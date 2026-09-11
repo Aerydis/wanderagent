@@ -1,6 +1,9 @@
 const connectionStatusElement =
   document.getElementById("connectionStatus");
 
+const connectionLabelElement =
+  connectionStatusElement?.querySelector(".connection-label");
+
 const statusMessageElement =
   document.getElementById("statusMessage");
 
@@ -9,6 +12,15 @@ const errorPanelElement =
 
 const feedElement =
   document.getElementById("feed");
+
+const emptyStateElement =
+  document.getElementById("emptyState");
+
+const infoSectionElement =
+  document.getElementById("infoSection");
+
+const composerSectionElement =
+  document.getElementById("composerSection");
 
 const formElement =
   document.getElementById("feedForm");
@@ -341,6 +353,7 @@ formElement.addEventListener(
 
     clearError();
     feedElement.replaceChildren();
+    updateEmptyState(false);
 
     waitingForFeedResponse = true;
     requestStartedAt = Date.now();
@@ -478,6 +491,8 @@ function renderAgentOutput(data) {
     );
   }
 
+  updateEmptyState(validItems.length > 0);
+
   if (validItems.length === 0) {
     statusMessageElement.textContent =
       "에이전트가 일치하는 콘텐츠를 찾지 못했습니다.";
@@ -550,113 +565,211 @@ function isValidFeedItem(item) {
   return true;
 }
 
+const ICONS = {
+  eye:
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>',
+  comment:
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  duration:
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  upvote:
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5l4 6H8l4-6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  book:
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 0-2 2V4z" stroke="currentColor" stroke-width="1.7"/><path d="M7 20h11" stroke="currentColor" stroke-width="1.7"/></svg>',
+  share:
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 8l-8 4 8 4V8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M16 5h3v14h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+};
+
 function createFeedCard(item) {
-  const cardLayout = document.createElement("div");
-  cardLayout.className = "card-layout";
+  const postLayout = document.createElement("div");
+  postLayout.className = "post-layout";
 
-  const article =
-    document.createElement("article");
+  const article = document.createElement("article");
+  article.className = "post";
 
-  article.className = "card";
+  const header = document.createElement("div");
+  header.className = "post-header";
+  header.appendChild(createPostAvatar(item.source));
+
+  const meta = document.createElement("div");
+  meta.className = "post-meta";
+
+  const creatorLine = document.createElement("p");
+  creatorLine.className = "post-creator";
+  creatorLine.textContent =
+    item.creator || getSourceLabel(item.source);
+
+  const subLine = document.createElement("p");
+  subLine.className = "post-subline";
+  subLine.textContent = `${getSourceLabel(item.source)} · ${formatRelativeDate(item.publish_date)}`;
+
+  meta.append(creatorLine, subLine);
+  header.appendChild(meta);
+  article.appendChild(header);
 
   if (
     item.thumbnail_url &&
     isSafeHttpUrl(item.thumbnail_url)
   ) {
-    const image =
-      document.createElement("img");
+    const mediaWrap = document.createElement("div");
+    mediaWrap.className = "post-media-wrap";
 
-    image.className = "card-image";
+    const image = document.createElement("img");
+    image.className = "post-media";
     image.src = item.thumbnail_url;
     image.alt = "";
     image.loading = "lazy";
+    image.addEventListener("error", () => mediaWrap.remove());
 
-    image.addEventListener(
-      "error",
-      () => image.remove()
-    );
+    mediaWrap.appendChild(image);
 
-    article.appendChild(image);
+    if (item.source === "youtube") {
+      const playBadge = document.createElement("span");
+      playBadge.className = "post-play-badge";
+      playBadge.setAttribute("aria-hidden", "true");
+      mediaWrap.appendChild(playBadge);
+    }
+
+    article.appendChild(mediaWrap);
   }
 
-  const body =
-    document.createElement("div");
+  article.appendChild(createPostActions(item, postLayout));
 
-  body.className = "card-body";
+  const caption = document.createElement("div");
+  caption.className = "post-caption";
 
-  const topLine =
-    document.createElement("div");
-
-  topLine.className = "card-topline";
-
-  const sourceBadge =
-    document.createElement("span");
-
-  sourceBadge.className =
-    `source-badge source-${item.source}`;
-
-  sourceBadge.textContent =
-    getSourceLabel(item.source);
-
-  const date =
-    document.createElement("span");
-
-  date.className = "card-date";
-  date.textContent =
-    formatDate(item.publish_date);
-
-  topLine.append(
-    sourceBadge,
-    date
-  );
-
-  body.appendChild(topLine);
-
-  const title =
-    document.createElement("h2");
-
+  const title = document.createElement("strong");
+  title.className = "post-title";
   title.textContent = item.title;
-  body.appendChild(title);
-
-  if (item.creator) {
-    const creator =
-      document.createElement("p");
-
-    creator.className = "creator";
-    creator.textContent = item.creator;
-
-    body.appendChild(creator);
-  }
+  caption.appendChild(title);
 
   if (item.description) {
-    const description =
-      document.createElement("p");
-
-    description.className = "description";
-    description.textContent =
-      stripHtml(item.description);
-
-    body.appendChild(description);
+    const description = document.createElement("p");
+    description.className = "post-description";
+    description.textContent = stripHtml(item.description);
+    caption.appendChild(description);
   }
 
-  const statistics =
-    createStatistics(item);
+  article.appendChild(caption);
 
-  if (
-    statistics.childElementCount > 0
-  ) {
-    body.appendChild(statistics);
+  const links = createPostLinks(item);
+  if (links.childElementCount > 0) {
+    article.appendChild(links);
   }
 
-  const links =
-    document.createElement("div");
+  postLayout.appendChild(article);
+  return postLayout;
+}
 
-  links.className = "card-links";
+function createPostAvatar(source) {
+  const initials = {
+    youtube: "Y",
+    hackernews: "HN",
+    news: "N",
+    cardnews: "C"
+  };
+
+  const avatar = document.createElement("div");
+  avatar.className = `post-avatar source-${source}`;
+  avatar.textContent = initials[source] || "?";
+  avatar.setAttribute("aria-hidden", "true");
+
+  return avatar;
+}
+
+function createPostActions(item, postLayout) {
+  const actions = document.createElement("div");
+  actions.className = "post-actions";
+
+  for (const stat of getPostStats(item)) {
+    const statElement = document.createElement("span");
+    statElement.className = "action-stat";
+    statElement.innerHTML = `${stat.icon}<span>${stat.label}</span>`;
+    actions.appendChild(statElement);
+  }
+
+  const explainButton = document.createElement("button");
+  explainButton.type = "button";
+  explainButton.className = "action-btn explain-btn";
+  explainButton.setAttribute("aria-label", "설명 보기");
+  explainButton.title = "설명 보기";
+  explainButton.innerHTML = ICONS.book;
+  explainButton.addEventListener("click", () => {
+    openExplanationWorkspace(item, postLayout);
+  });
+  actions.appendChild(explainButton);
+
+  if (item.url && isSafeHttpUrl(item.url)) {
+    const linkButton = document.createElement("a");
+    linkButton.className = "action-btn link-btn";
+    linkButton.href = item.url;
+    linkButton.target = "_blank";
+    linkButton.rel = "noopener noreferrer";
+    linkButton.setAttribute(
+      "aria-label",
+      getPrimaryLinkLabel(item.source)
+    );
+    linkButton.title = getPrimaryLinkLabel(item.source);
+    linkButton.innerHTML = ICONS.share;
+    actions.appendChild(linkButton);
+  }
+
+  return actions;
+}
+
+function getPostStats(item) {
+  const stats = [];
+
+  if (item.source === "youtube") {
+    if (item.metadata?.video_length) {
+      stats.push({
+        icon: ICONS.duration,
+        label: formatDuration(item.metadata.video_length)
+      });
+    }
+
+    if (isUsableNumber(item.metadata?.view_count)) {
+      stats.push({
+        icon: ICONS.eye,
+        label: `${formatNumber(item.metadata.view_count)}회`
+      });
+    }
+  }
+
+  if (item.source === "hackernews") {
+    if (isUsableNumber(item.metadata?.upvote_count)) {
+      stats.push({
+        icon: ICONS.upvote,
+        label: formatNumber(item.metadata.upvote_count)
+      });
+    }
+
+    if (isUsableNumber(item.metadata?.comment_count)) {
+      stats.push({
+        icon: ICONS.comment,
+        label: formatNumber(item.metadata.comment_count)
+      });
+    }
+  }
 
   if (
-    item.url &&
-    isSafeHttpUrl(item.url)
+    item.source === "cardnews" &&
+    isUsableNumber(item.metadata?.view_count)
   ) {
+    stats.push({
+      icon: ICONS.eye,
+      label: `${formatNumber(item.metadata.view_count)}회`
+    });
+  }
+
+  return stats;
+}
+
+function createPostLinks(item) {
+  const links = document.createElement("div");
+  links.className = "post-links";
+
+  if (item.url && isSafeHttpUrl(item.url)) {
     links.appendChild(
       createExternalLink(
         item.url,
@@ -666,8 +779,7 @@ function createFeedCard(item) {
     );
   }
 
-  const discussionUrl =
-    item.metadata?.discussion_url;
+  const discussionUrl = item.metadata?.discussion_url;
 
   if (
     item.source === "hackernews" &&
@@ -683,32 +795,7 @@ function createFeedCard(item) {
     );
   }
 
-  if (links.childElementCount > 0) {
-    body.appendChild(links);
-  }
-
-  body.appendChild(createExplanationTrigger(item));
-
-  article.appendChild(body);
-  cardLayout.appendChild(article);
-
-  return cardLayout;
-}
-
-function createExplanationTrigger(item) {
-  const container = document.createElement("div");
-  container.className = "explanation-trigger";
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "explanation-button";
-  button.textContent = "설명 보기";
-  button.addEventListener("click", () => {
-    openExplanationWorkspace(item, container.closest(".card-layout"));
-  });
-
-  container.appendChild(button);
-  return container;
+  return links;
 }
 
 function openExplanationWorkspace(item, cardLayout) {
@@ -727,8 +814,8 @@ function openExplanationWorkspace(item, cardLayout) {
 
   const postPanel = document.createElement("div");
   postPanel.className = "explanation-post-panel";
-  const post = cardLayout.querySelector(".card").cloneNode(true);
-  post.querySelector(".explanation-trigger")?.remove();
+  const post = cardLayout.querySelector(".post").cloneNode(true);
+  post.querySelector(".post-actions")?.remove();
   postPanel.appendChild(post);
 
   const chatPanel = document.createElement("div");
@@ -902,104 +989,20 @@ async function askExplanationAgent(explanationLine, item, question) {
   });
 }
 
-function createStatistics(item) {
-  const container =
-    document.createElement("div");
-
-  container.className = "statistics";
-
-  const statistics = [];
-
-  if (item.source === "youtube") {
-    if (item.metadata?.video_length) {
-      statistics.push(
-        `길이: ${formatDuration(
-          item.metadata.video_length
-        )}`
-      );
-    }
-
-    if (
-      isUsableNumber(
-        item.metadata?.view_count
-      )
-    ) {
-      statistics.push(
-        `${formatNumber(
-          item.metadata.view_count
-        )}회 조회`
-      );
-    }
-  }
-
-  if (item.source === "hackernews") {
-    if (
-      isUsableNumber(
-        item.metadata?.upvote_count
-      )
-    ) {
-      statistics.push(
-        `${formatNumber(
-          item.metadata.upvote_count
-        )}포인트`
-      );
-    }
-
-    if (
-      isUsableNumber(
-        item.metadata?.comment_count
-      )
-    ) {
-      statistics.push(
-        `${formatNumber(
-          item.metadata.comment_count
-        )}개 댓글`
-      );
-    }
-  }
-
-  if (
-    item.source === "cardnews" &&
-    isUsableNumber(
-      item.metadata?.view_count
-    )
-  ) {
-    statistics.push(
-      `${formatNumber(
-        item.metadata.view_count
-      )}회 조회`
-    );
-  }
-
-  for (const text of statistics) {
-    const statistic =
-      document.createElement("span");
-
-    statistic.className = "statistic";
-    statistic.textContent = text;
-
-    container.appendChild(statistic);
-  }
-
-  return container;
-}
-
 function createExternalLink(
   url,
   label,
   secondary
 ) {
-  const link =
-    document.createElement("a");
+  const link = document.createElement("a");
 
   link.href = url;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   link.textContent = label;
-
   link.className = secondary
-    ? "card-link secondary"
-    : "card-link";
+    ? "post-link secondary"
+    : "post-link";
 
   return link;
 }
@@ -1045,6 +1048,51 @@ function formatDate(value) {
       day: "numeric"
     }
   ).format(date);
+}
+
+function formatRelativeDate(value) {
+  if (!value) {
+    return "방금";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "방금";
+  }
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) {
+    return "방금";
+  }
+
+  if (diffMins < 60) {
+    return `${diffMins}분 전`;
+  }
+
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffHours < 24) {
+    return `${diffHours}시간 전`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays < 7) {
+    return `${diffDays}일 전`;
+  }
+
+  return formatDate(value);
+}
+
+function updateEmptyState(hasItems) {
+  if (!emptyStateElement) {
+    return;
+  }
+
+  emptyStateElement.classList.toggle("hidden", hasItems);
 }
 
 function formatNumber(value) {
@@ -1148,8 +1196,11 @@ function setConnectionStatus(
   text,
   state
 ) {
-  connectionStatusElement.textContent =
-    text;
+  connectionStatusElement.title = text;
+
+  if (connectionLabelElement) {
+    connectionLabelElement.textContent = text;
+  }
 
   connectionStatusElement.className =
     "connection-status";
@@ -1217,11 +1268,80 @@ function renderDebugHistory() {
 
 clearDebugButtonElement.addEventListener(
   "click",
-  () => {
+  (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     debugHistory.length = 0;
     renderDebugHistory();
   }
 );
+
+const bottomNavItems =
+  document.querySelectorAll(".bottom-nav-item");
+
+function setActiveNav(navName) {
+  bottomNavItems.forEach((item) => {
+    item.classList.toggle(
+      "active",
+      item.dataset.nav === navName
+    );
+  });
+}
+
+bottomNavItems.forEach((item) => {
+  item.addEventListener("click", () => {
+    const navName = item.dataset.nav;
+    setActiveNav(navName);
+
+    if (navName === "home") {
+      infoSectionElement?.classList.add("hidden");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+      return;
+    }
+
+    if (navName === "create") {
+      infoSectionElement?.classList.add("hidden");
+      composerSectionElement?.classList.add("composer-expanded");
+      promptElement?.focus();
+      composerSectionElement?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+      return;
+    }
+
+    if (navName === "info") {
+      infoSectionElement?.classList.toggle("hidden");
+
+      if (
+        infoSectionElement &&
+        !infoSectionElement.classList.contains("hidden")
+      ) {
+        infoSectionElement.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    }
+  });
+});
+
+promptElement?.addEventListener("focus", () => {
+  composerSectionElement?.classList.add("composer-expanded");
+});
+
+promptElement?.addEventListener("blur", () => {
+  if (!promptElement.value.trim()) {
+    composerSectionElement?.classList.remove("composer-expanded");
+  }
+});
+
+formElement?.addEventListener("submit", () => {
+  composerSectionElement?.classList.remove("composer-expanded");
+});
 
 function startRequestProgress() {
   clearInterval(requestProgressTimer);
