@@ -16,6 +16,12 @@ const errorPanelElement =
 const feedElement =
   document.getElementById("feed");
 
+const loadMoreSectionElement =
+  document.getElementById("loadMoreSection");
+
+const loadMoreButtonElement =
+  document.getElementById("loadMoreButton");
+
 const emptyStateElement =
   document.getElementById("emptyState");
 
@@ -50,6 +56,8 @@ const clearDebugButtonElement =
 let directLine = null;
 let connected = false;
 let waitingForFeedResponse = false;
+let appendNextResponse = false;
+let lastFeedMessage = "";
 let requestStartedAt = null;
 let requestActivityCount = 0;
 let requestProgressTimer = null;
@@ -390,21 +398,34 @@ formElement.addEventListener(
     }
 
     clearError();
-    feedElement.replaceChildren();
-    appShellElement?.classList.remove("onboarding-state");
-    updateEmptyState(false);
+
+    const isAppending = appendNextResponse;
+    const requestMessage =
+      isAppending && lastFeedMessage
+        ? lastFeedMessage
+        : message;
+
+    lastFeedMessage = requestMessage;
+
+    if (!isAppending) {
+      feedElement.replaceChildren();
+      loadMoreSectionElement?.classList.add("hidden");
+      appShellElement?.classList.remove("onboarding-state");
+      updateEmptyState(false);
+    }
 
     waitingForFeedResponse = true;
     requestStartedAt = Date.now();
     requestActivityCount = 0;
     submitButtonElement.disabled = true;
+    loadMoreButtonElement.disabled = true;
     startRequestProgress();
 
     statusMessageElement.textContent =
       "상위 에이전트에 요청을 보내는 중...";
 
     const requestObject = {
-      message,
+      message: requestMessage,
       fetch_amount: DEFAULT_FETCH_AMOUNT,
       source: DEFAULT_SOURCE,
       output_format: "wander_feed_json"
@@ -451,6 +472,23 @@ formElement.addEventListener(
           );
         }
       });
+  }
+);
+
+loadMoreButtonElement?.addEventListener(
+  "click",
+  () => {
+    if (
+      !connected ||
+      !directLine ||
+      !lastFeedMessage ||
+      waitingForFeedResponse
+    ) {
+      return;
+    }
+
+    appendNextResponse = true;
+    formElement.requestSubmit();
   }
 );
 
@@ -522,7 +560,9 @@ function renderAgentOutput(data) {
     isValidFeedItem
   );
 
-  feedElement.replaceChildren();
+  if (!appendNextResponse) {
+    feedElement.replaceChildren();
+  }
 
   for (const item of validItems) {
     feedElement.appendChild(
@@ -530,14 +570,24 @@ function renderAgentOutput(data) {
     );
   }
 
-  updateEmptyState(validItems.length > 0);
+  const totalItems =
+    feedElement.querySelectorAll(".post-layout").length;
 
-  if (validItems.length === 0) {
+  updateEmptyState(totalItems > 0);
+  loadMoreSectionElement?.classList.toggle(
+    "hidden",
+    totalItems === 0
+  );
+
+  if (totalItems === 0) {
     statusMessageElement.textContent =
       "에이전트가 일치하는 콘텐츠를 찾지 못했습니다.";
+  } else if (appendNextResponse) {
+    statusMessageElement.textContent =
+      `${validItems.length}개의 게시물을 더 불러왔습니다.`;
   } else {
     statusMessageElement.textContent =
-      `${validItems.length}개의 피드 항목을 불러왔습니다.`;
+      `${totalItems}개의 피드 항목을 불러왔습니다.`;
   }
 
   if (
@@ -1407,7 +1457,9 @@ function updateRequestProgress(message) {
 
 function finishRequest() {
   waitingForFeedResponse = false;
+  appendNextResponse = false;
   submitButtonElement.disabled = false;
+  loadMoreButtonElement.disabled = false;
   clearInterval(requestProgressTimer);
   requestProgressTimer = null;
 }

@@ -433,6 +433,33 @@ textarea {
   flex-direction: column;
 }
 
+.load-more-section {
+  padding: 20px 14px 8px;
+  text-align: center;
+}
+
+.load-more-button {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-ui);
+  background: var(--surface);
+  color: var(--accent-hover);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.load-more-button:hover {
+  background: var(--bg);
+}
+
+.load-more-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .post-layout + .post-layout {
   margin-top: 16px;
 }
