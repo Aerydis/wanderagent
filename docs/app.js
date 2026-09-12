@@ -4,6 +4,9 @@ const connectionStatusElement =
 const connectionLabelElement =
   connectionStatusElement?.querySelector(".connection-label");
 
+const userModeToggleElement =
+  document.getElementById("userModeToggle");
+
 const statusMessageElement =
   document.getElementById("statusMessage");
 
@@ -52,8 +55,40 @@ let requestActivityCount = 0;
 let requestProgressTimer = null;
 const debugHistory = [];
 const maximumDebugEntries = 100;
+const userModeStorageKey = "wander-user-mode";
+
+initializeUserMode();
 
 startConnection();
+
+function initializeUserMode() {
+  const userModeEnabled =
+    localStorage.getItem(userModeStorageKey) === "true";
+
+  setUserMode(userModeEnabled);
+
+  userModeToggleElement?.addEventListener(
+    "change",
+    () => {
+      setUserMode(userModeToggleElement.checked);
+      localStorage.setItem(
+        userModeStorageKey,
+        String(userModeToggleElement.checked)
+      );
+    }
+  );
+}
+
+function setUserMode(enabled) {
+  appShellElement?.classList.toggle(
+    "user-mode",
+    enabled
+  );
+
+  if (userModeToggleElement) {
+    userModeToggleElement.checked = enabled;
+  }
+}
 
 async function startConnection() {
   try {
