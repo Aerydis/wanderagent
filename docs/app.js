@@ -34,7 +34,7 @@ const formElement =
 const promptElement =
   document.getElementById("prompt");
 
-const DEFAULT_FETCH_AMOUNT = 3;
+const DEFAULT_FETCH_AMOUNT = 10;
 const DEFAULT_SOURCE = "all";
 const API_BASE_URL = "https://wanderagent.onrender.com";
 
