@@ -434,7 +434,11 @@ textarea {
 }
 
 .load-more-section {
-  padding: 20px 14px 8px;
+  margin-top: 28px;
+  padding: 20px 14px 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   text-align: center;
 }
 
@@ -444,7 +448,7 @@ textarea {
   padding: 10px 16px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-ui);
-  background: var(--surface);
+  background: transparent;
   color: var(--accent-hover);
   font-size: 13px;
   font-weight: 600;
@@ -452,7 +456,7 @@ textarea {
 }
 
 .load-more-button:hover {
-  background: var(--bg);
+  background: rgba(124, 154, 130, 0.08);
 }
 
 .load-more-button:disabled {
